@@ -1,0 +1,27 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install
+        run: npm install
+
+      - name: Build
+        run: npx electron-builder --win --x64
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: PharmaCare-EXE
+          path: dist/*.exe
