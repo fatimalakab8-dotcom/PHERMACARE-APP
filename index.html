@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>فارما كير - نظام إدارة الصيدلية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root{
+    --primary:#0a8f5e;
+    --primary-dark:#066d47;
+    --primary-light:#e6f7f0;
+    --navy:#0f2c4a;
+    --navy-light:#1a3a5f;
+    --bg:#f4f7fa;
+    --card:#ffffff;
+    --text:#0f2c4a;
+    --muted:#6b7a8a;
+    --border:#e4eaf0;
+    --danger:#dc3545;
+    --warning:#f5a623;
+    --success:#0a8f5e;
+    --shadow:0 2px 12px rgba(15,44,74,0.08);
+    --radius:12px;
+  }
+  body.dark{
+    --primary:#1ab377;
+    --primary-dark:#0a8f5e;
+    --primary-light:#0e2920;
+    --navy:#e4eaf0;
+    --navy-light:#c5d0dc;
+    --bg:#0d1620;
+    --card:#162232;
+    --text:#e4eaf0;
+    --muted:#8a9aab;
+    --border:#243447;
+    --shadow:0 2px 12px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body,h1,h2,h3,h4,h5,h6,p,span,div,a,button,input,select,textarea,label,th,td,li{font-family:'Cairo',sans-serif;}
+  .fa,.fas,.far,.fal,.fab,.fa-solid,.fa-regular,.fa-light,.fa-brands,i[class*="fa-"]{font-family:"Font Awesome 6 Free","Font Awesome 6 Brands" !important;font-weight:900;}
+  .fab,.fa-brands{font-weight:400 !important;}
+  body{background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
+  a{color:inherit;text-decoration:none;}
+  button{cursor:pointer;font-family:'Cairo',sans-serif;border:none;background:none;color:inherit;}
+  input,select,textarea{font-family:'Cairo',sans-serif;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;width:100%;outline:none;transition:border .2s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--primary);}
+  table{width:100%;border-collapse:collapse;}
+  th,td{padding:12px 14px;text-align:right;border-bottom:1px solid var(--border);font-size:14px;}
+  th{background:var(--primary-light);color:var(--primary-dark);font-weight:700;font-size:13px;}
+  tr:hover td{background:rgba(10,143,94,0.04);}
+
+  .emoji-icon{display:inline-block;font-style:normal;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Twemoji Mozilla",sans-serif;font-size:1.05em;line-height:1;margin-inline-end:4px;vertical-align:-2px;}
+  /* Layout */
+  .app{display:flex;min-height:100vh;}
+  .sidebar{width:260px;background:var(--navy);color:#fff;padding:24px 0;position:fixed;height:100vh;right:0;top:0;overflow-y:auto;transition:transform .3s;z-index:100;}
+  .sidebar .logo{padding:0 24px 24px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:12px;}
+  .sidebar .logo-icon{width:44px;height:44px;background:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+  .sidebar .logo h1{font-size:18px;font-weight:900;}
+  .sidebar .logo p{font-size:11px;opacity:.7;}
+  .nav{padding:16px 0;}
+  .nav-item{display:flex;align-items:center;gap:14px;padding:13px 24px;color:#cfd8e3;cursor:pointer;border-right:3px solid transparent;font-size:15px;transition:all .2s;}
+  .nav-item i{width:22px;text-align:center;font-size:16px;}
+  .nav-item:hover{background:rgba(255,255,255,0.05);color:#fff;}
+  .nav-item.active{background:rgba(10,143,94,0.15);color:var(--primary);border-right-color:var(--primary);font-weight:700;}
+  .main{flex:1;margin-right:260px;padding:24px 32px;min-width:0;}
+
+  /* Header */
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+  .page-title{font-size:24px;font-weight:900;color:var(--navy);}
+  body.dark .page-title{color:var(--navy);}
+  .topbar-actions{display:flex;gap:10px;align-items:center;}
+  .icon-btn{width:42px;height:42px;border-radius:10px;background:var(--card);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text);transition:transform .2s;}
+  .icon-btn:hover{transform:translateY(-2px);color:var(--primary);}
+  .menu-toggle{display:none;}
+
+  /* Cards */
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px;}
+  .card-title{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);display:flex;align-items:center;gap:8px;}
+  body.dark .card-title{color:var(--navy);}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px;}
+  .stat{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;animation:fadeUp .4s ease;}
+  .stat .info p{color:var(--muted);font-size:13px;margin-bottom:6px;}
+  .stat .info h3{font-size:24px;font-weight:900;color:var(--navy);}
+  body.dark .stat .info h3{color:var(--navy);}
+  .stat .icon{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;}
+  .stat .icon.green{background:linear-gradient(135deg,#0a8f5e,#1ab377);}
+  .stat .icon.blue{background:linear-gradient(135deg,#0f2c4a,#1e5b9e);}
+  .stat .icon.orange{background:linear-gradient(135deg,#f5a623,#ff7e3e);}
+  .stat .icon.red{background:linear-gradient(135deg,#dc3545,#ff5a6e);}
+
+  /* Buttons */
+  .btn{padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);}
+  .btn-secondary{background:var(--navy);color:#fff;}
+  .btn-secondary:hover{background:var(--navy-light);}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-outline{background:transparent;color:var(--primary);border:1px solid var(--primary);}
+  .btn-outline:hover{background:var(--primary);color:#fff;}
+  .btn-sm{padding:6px 12px;font-size:12px;}
+
+  /* Toolbar */
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .toolbar .search{flex:1;min-width:200px;position:relative;}
+  .toolbar .search i{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);}
+  .toolbar .search input{padding-right:40px;}
+
+  /* Badges */
+  .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+  .badge-success{background:#d4f5e6;color:#066d47;}
+  .badge-warning{background:#fff2d6;color:#a06b00;}
+  .badge-danger{background:#ffd6dc;color:#a01827;}
+  .badge-info{background:#d6e9ff;color:#0f2c4a;}
+  body.dark .badge-success{background:#0e2920;color:#1ab377;}
+  body.dark .badge-warning{background:#3a2a0a;color:#f5a623;}
+  body.dark .badge-danger{background:#3a0e14;color:#ff5a6e;}
+  body.dark .badge-info{background:#0e1f3a;color:#5ba3ff;}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,44,74,0.55);display:none;justify-content:center;align-items:center;z-index:1000;padding:20px;animation:fadeIn .2s;}
+  .modal-overlay.active{display:flex;}
+  .modal{background:var(--card);border-radius:16px;padding:28px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;animation:popIn .25s ease;}
+  .modal.lg{max-width:900px;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+  .modal-header h2{font-size:18px;color:var(--navy);}
+  body.dark .modal-header h2{color:var(--navy);}
+  .modal-close{font-size:22px;color:var(--muted);cursor:pointer;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-group label{font-size:13px;font-weight:600;color:var(--muted);}
+  .form-group.full{grid-column:1/-1;}
+  .modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+
+  /* Toast */
+  .toast-wrap{position:fixed;top:24px;left:24px;z-index:2000;display:flex;flex-direction:column;gap:10px;}
+  .toast{background:var(--card);padding:14px 18px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);display:flex;align-items:center;gap:12px;min-width:280px;border-right:4px solid var(--primary);animation:slideIn .3s ease;}
+  .toast.success{border-color:var(--success);} .toast.success i{color:var(--success);}
+  .toast.error{border-color:var(--danger);} .toast.error i{color:var(--danger);}
+  .toast.warning{border-color:var(--warning);} .toast.warning i{color:var(--warning);}
+  .toast i{font-size:20px;}
+
+  /* POS */
+  .pos-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;}
+  .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;max-height:520px;overflow-y:auto;padding:4px;}
+  .product-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:all .2s;text-align:center;}
+  .product-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow);}
+  .product-card .pic{width:56px;height:56px;border-radius:12px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;}
+  .product-card h4{font-size:13px;font-weight:700;margin-bottom:4px;min-height:36px;}
+  .product-card .price{color:var(--primary);font-weight:700;font-size:14px;}
+  .product-card .stock{font-size:11px;color:var(--muted);}
+
+  .cart-items{max-height:300px;overflow-y:auto;margin-bottom:14px;}
+  .cart-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border);gap:10px;}
+  .cart-item .name{flex:1;font-size:13px;font-weight:600;}
+  .cart-item .qty{display:flex;align-items:center;gap:6px;}
+  .cart-item .qty button{width:26px;height:26px;border-radius:6px;background:var(--primary-light);color:var(--primary);font-weight:700;}
+  .cart-item .qty span{min-width:24px;text-align:center;font-weight:700;}
+  .cart-item .total{font-weight:700;color:var(--primary);min-width:70px;text-align:left;}
+  .cart-item .remove{color:var(--danger);}
+
+  .totals{padding:14px;background:var(--primary-light);border-radius:10px;margin:14px 0;}
+  .totals-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px;}
+  .totals-row.grand{font-size:18px;font-weight:900;color:var(--primary-dark);border-top:2px solid var(--primary);padding-top:8px;margin-top:8px;}
+  body.dark .totals-row.grand{color:var(--primary);}
+
+  /* Chart */
+  .chart-wrap{position:relative;height:280px;}
+
+  /* Empty */
+  .empty{text-align:center;padding:40px 20px;color:var(--muted);}
+  .empty i{font-size:48px;margin-bottom:12px;opacity:.4;}
+
+  /* View pages */
+  .view{display:none;animation:fadeUp .3s ease;}
+  .view.active{display:block;}
+
+  /* Responsive */
+  .sidebar-close{display:none;position:absolute;top:14px;left:14px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.12);color:#fff;align-items:center;justify-content:center;font-size:20px;cursor:pointer;border:none;}
+  .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;animation:fadeIn .2s;}
+  .sidebar-backdrop.open{display:block;}
+  @media(max-width:900px){
+    .sidebar{transform:translateX(100%);}
+    .sidebar.open{transform:translateX(0);box-shadow:-4px 0 20px rgba(0,0,0,0.3);}
+    .sidebar-close{display:flex;}
+    .main{margin-right:0;padding:16px;}
+    .menu-toggle{display:flex;}
+    .pos-grid{grid-template-columns:1fr;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+
+  /* Animations */
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes popIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:none}}
+  @keyframes slideIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+
+  /* Print */
+  @media print{
+    body * {visibility:hidden;}
+    #printArea, #printArea * {visibility:visible;}
+    #printArea{position:absolute;right:0;top:0;width:100%;padding:30px;color:#000;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" onclick="closeSidebar()" aria-label="إغلاق">✕</button>
+    <div class="logo">
+      <div class="logo-icon"><span class="emoji-icon" aria-hidden="true">📝</span></div>
+      <div>
+        <h1>فارما كير</h1>
+        <p>نظام إدارة الصيدلية</p>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-view="dashboard"><span class="emoji-icon" aria-hidden="true">📈</span> لوحة التحكم</div>
+      <div class="nav-item" data-view="pos"><span class="emoji-icon" aria-hidden="true">💰</span> نقطة البيع</div>
+      <div class="nav-item" data-view="search"><span class="emoji-icon" aria-hidden="true">🔍</span> بحث الأدوية</div>
+      <div class="nav-item" data-view="inventory"><span class="emoji-icon" aria-hidden="true">📦</span> إدارة المخزون</div>
+      <div class="nav-item" data-view="purchases"><span class="emoji-icon" aria-hidden="true">🚚</span> فواتير الشراء</div>
+      <div class="nav-item" data-view="sales"><span class="emoji-icon" aria-hidden="true">🧾</span> سجل المبيعات</div>
+      <div class="nav-item" data-view="reports"><span class="emoji-icon" aria-hidden="true">•</span> التقارير</div>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="icon-btn menu-toggle" onclick="toggleSidebar()"><span class="emoji-icon" aria-hidden="true">☰</span></button>
+        <h2 class="page-title" id="pageTitle">لوحة التحكم</h2>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="تبديل الوضع"><span class="emoji-icon" aria-hidden="true">🌙</span></button>
+        <button class="icon-btn" title="الإشعارات"><span class="emoji-icon" aria-hidden="true">🔔</span></button>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <section class="view active" id="view-dashboard">
+      <div class="stats">
+        <div class="stat"><div class="info"><p>مبيعات اليوم</p><h3 id="statSalesToday">0 ج.م</h3></div><div class="icon green"><span class="emoji-icon" aria-hidden="true">•</span></div></div>
+        <div class="stat"><div class="info"><p>عمليات اليوم</p><h3 id="statOpsToday">0</h3></div><div class="icon blue"><span class="emoji-icon" aria-hidden="true">🧾</span></div></div>
+        <div class="stat"><div class="info"><p>مخزون منخفض</p><h3 id="statLow">0</h3></div><div class="icon orange"><span class="emoji-icon" aria-hidden="true">•</span></div></div>
+        <div class="stat"><div class="info"><p>قارب على الانتهاء</p><h3 id="statExp">0</h3></div><div class="icon red"><span class="emoji-icon" aria-hidden="true">🕒</span></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;" id="dashGrid">
+        <div class="card">
+          <div class="card-title"><span class="emoji-icon" aria-hidden="true">•</span> المبيعات خلال آخر 7 أيام</div>
+          <div class="chart-wrap"><canvas id="salesChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="emoji-icon" aria-hidden="true">•</span> الأكثر مبيعاً</div>
+          <div id="topSellers"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="emoji-icon" aria-hidden="true">•</span> تنبيهات هامة</div>
+        <div id="alertsList"></div>
+      </div>
+    </section>
+
+    <!-- POS -->
+    <section class="view" id="view-pos">
+      <div class="pos-grid">
+        <div class="card">
+          <div class="toolbar">
+            <div class="search"><span class="emoji-icon" aria-hidden="true">🔍</span><input type="text" id="posSearch" placeholder="ابحث بالاسم أو امسح الباركود..." autocomplete="off"/></div>
+          </div>
+          <div class="product-grid" id="posProducts"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="emoji-icon" aria-hidden="true">•</span> سلة المشتريات</div>
+          <div class="cart-items" id="cartItems"><div class="empty"><span class="emoji-icon" aria-hidden="true">•</span><p>السلة فارغة</p></div></div>
+          <div class="form-grid">
+            <div class="form-group"><label>نوع الخصم</label>
+              <select id="discountType" onchange="updateTotals()"><option value="none">بدون خصم</option><option value="percent">نسبة %</option><option value="fixed">مبلغ ثابت</option></select>
+            </div>
+            <div class="form-group"><label>قيمة الخصم</label><input type="number" id="discountValue" value="0" min="0" oninput="updateTotals()"/></div>
+          </div>
+          <div class="totals">
+            <div class="totals-row"><span>المجموع الفرعي</span><span id="subtotal">0.00 ج.م</span></div>
+            <div class="totals-row"><span>الخصم</span><span id="discountShow">0.00 ج.م</span></div>
+            <div class="totals-row grand"><span>الإجمالي</span><span id="grandTotal">0.00 ج.م</span></div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><label>طريقة الدفع</label>
+              <select id="paymentMethod"><option value="cash">نقداً</option><option value="card">بطاقة</option><option value="insurance">تأمين</option></select>
+            </div>
+            <div class="form-group"><label>المبلغ المدفوع</label><input type="number" id="paidAmount" value="0" min="0" oninput="updateChange()"/></div>
+            <div class="form-group full"><label>الباقي</label><input type="text" id="changeAmount" value="0.00 ج.م" readonly style="background:var(--primary-light);font-weight:700;color:var(--primary-dark);"/></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            <button class="btn btn-outline" onclick="clearCart()" style="flex:1;"><span class="emoji-icon" aria-hidden="true">🗑️</span> تفريغ</button>
+            <button class="btn btn-primary" onclick="completeSale()" style="flex:2;"><span class="emoji-icon" aria-hidden="true">✅</span> إتمام البيع</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Inventory -->
+    <section class="view" id="view-inventory">
+      <div class="card">
+        <div class="toolbar">
+          <div class="search"><span class="emoji-icon" aria-hidden="true">🔍</span><input type="text" id="invSearch" placeholder="ابحث بالاسم أو الباركود..." oninput="renderInventory()"/></div>
+          <select id="invCategory" onchange="renderInventory()" style="max-width:180px;"><option value="">كل الفئات</option></select>
+          <select id="invStatus" onchange="renderInventory()" style="max-width:180px;">
+            <option value="">كل الحالات</option>
+            <option value="ok">متوفر</option>
+            <option value="low">مخزون منخفض</option>
+            <option value="expiring">قارب الانتهاء</option>
+            <option value="expired">منتهي الصلاحية</option>
+          </select>
+          <button class="btn btn-primary" onclick="openMedModal()"><span class="emoji-icon" aria-hidden="true">➕</span> إضافة دواء</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>الاسم</th><th>الباركود</th><th>الفئة</th><th>الشركة</th><th>الوحدة</th><th>سعر البيع</th><th>الكمية</th><th>تاريخ الانتهاء</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+            <tbody id="invBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Purchases -->
+    <section class="view" id="view-purchases">
+      <div class="card">
+        <div class="toolbar">
+          <h3 style="flex:1;font-size:16px;">فواتير المشتريات من الموردين</h3>
+          <button class="btn btn-primary" onclick="openPurchaseModal()"><span class="emoji-icon" aria-hidden="true">➕</span> فاتورة شراء جديدة</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>رقم الفاتورة</th><th>المورد</th><th>التاريخ</th><th>عدد الأصناف</th><th>الإجمالي</th><th>إجراءات</th></tr></thead>
+            <tbody id="purchasesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sales -->
+    <section class="view" id="view-sales">
+      <div class="card">
+        <div class="card-title"><span class="emoji-icon" aria-hidden="true">🧾</span> سجل جميع المبيعات</div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>رقم الفاتورة</th><th>التاريخ والوقت</th><th>عدد الأصناف</th><th>طريقة الدفع</th><th>الخصم</th><th>الإجمالي</th><th>إجراءات</th></tr></thead>
+            <tbody id="salesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reports -->
+    <section class="view" id="view-reports">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" id="reportsGrid">
+        <div class="card">
+          <div class="card-title"><span class="emoji-icon" aria-hidden="true">📊</span> المبيعات الشهرية</div>
+          <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="emoji-icon" aria-hidden="true">•</span> الأدوية الأكثر مبيعاً</div>
+          <div id="topSellersReport"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--warning)"><span class="emoji-icon" aria-hidden="true">•</span> تقرير المخزون المنخفض</div>
+          <div id="lowStockReport"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--danger)"><span class="emoji-icon" aria-hidden="true">🕒</span> تقرير انتهاء الصلاحية</div>
+          <div id="expiryReport"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search -->
+    <section class="view" id="view-search">
+      <div class="card">
+        <div class="toolbar">
+          <div class="search"><span class="emoji-icon" aria-hidden="true">🔍</span><input type="text" id="searchPageInput" placeholder="ابحث عن دواء بالاسم، الباركود، أو الفئة..." autocomplete="off" oninput="renderSearchPage()"/></div>
+        </div>
+        <div id="searchPageResults"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Medicine Modal -->
+<div class="modal-overlay" id="medModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="medModalTitle">إضافة دواء جديد</h2><span class="modal-close" onclick="closeModal('medModal')">&times;</span></div>
+    <form id="medForm" onsubmit="saveMed(event)">
+      <input type="hidden" id="medId"/>
+      <div class="form-grid">
+        <div class="form-group full"><label>اسم الدواء *</label><input type="text" id="medName" required/></div>
+        <div class="form-group"><label>الباركود *</label><input type="text" id="medBarcode" required/></div>
+        <div class="form-group"><label>الفئة *</label><input type="text" id="medCategory" list="catList" required/><datalist id="catList"></datalist></div>
+        <div class="form-group"><label>الشركة المصنعة</label><input type="text" id="medCompany"/></div>
+        <div class="form-group"><label>الوحدة</label><select id="medUnit"><option>حبة</option><option>زجاجة</option><option>شراب</option><option>أمبولة</option><option>كريم</option><option>علبة</option></select></div>
+        <div class="form-group"><label>سعر الشراء</label><input type="number" id="medCost" step="0.01" min="0" value="0"/></div>
+        <div class="form-group"><label>سعر البيع *</label><input type="number" id="medPrice" step="0.01" min="0" required/></div>
+        <div class="form-group"><label>الكمية *</label><input type="number" id="medQty" min="0" required/></div>
+        <div class="form-group"><label>الحد الأدنى للتنبيه</label><input type="number" id="medMin" min="0" value="10"/></div>
+        <div class="form-group"><label>تاريخ الانتهاء *</label><input type="date" id="medExpiry" required/></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('medModal')">إلغاء</button>
+        <button type="submit" class="btn btn-primary"><span class="emoji-icon" aria-hidden="true">💾</span> حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Purchase Modal -->
+<div class="modal-overlay" id="purchaseModal">
+  <div class="modal lg">
+    <div class="modal-header"><h2>فاتورة شراء جديدة</h2><span class="modal-close" onclick="closeModal('purchaseModal')">&times;</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>اسم المورد *</label><input type="text" id="purSupplier"/></div>
+      <div class="form-group"><label>رقم الفاتورة *</label><input type="text" id="purInvoice"/></div>
+      <div class="form-group full"><label>التاريخ</label><input type="date" id="purDate"/></div>
+    </div>
+    <h4 style="margin:18px 0 10px;">الأصناف</h4>
+    <div style="background:var(--primary-light);padding:12px;border-radius:8px;margin-bottom:10px;">
+      <div style="position:relative;margin-bottom:8px;">
+        <div class="search" style="background:#fff;"><span class="emoji-icon" aria-hidden="true">🔍</span>
+          <input type="text" id="purSearch" placeholder="ابحث عن دواء في المخزون بالاسم أو الباركود..." autocomplete="off" oninput="renderPurSearchResults()"/>
+        </div>
+        <div id="purSearchResults" style="display:none;position:absolute;top:100%;right:0;left:0;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;z-index:10;margin-top:4px;box-shadow:0 6px 18px rgba(0,0,0,0.12);"></div>
+      </div>
+      <div id="purSelectedMed" style="display:none;background:#fff;padding:8px 12px;border-radius:8px;margin-bottom:8px;font-weight:700;color:var(--primary-dark);justify-content:space-between;align-items:center;"></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button type="button" class="btn btn-sm btn-outline" onclick="openMedModalFromPurchase()" style="flex:1;"><span class="emoji-icon" aria-hidden="true">➕</span> إضافة دواء جديد</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;">
+        <input type="number" id="purQty" placeholder="الكمية" min="1" value="1"/>
+        <input type="number" id="purCost" placeholder="سعر الشراء للوحدة" min="0" step="0.01"/>
+        <button class="btn btn-primary" onclick="addPurchaseItem()"><span class="emoji-icon" aria-hidden="true">➕</span> إضافة للفاتورة</button>
+      </div>
+      <input type="hidden" id="purSelectedId" value=""/>
+    </div>
+    <table>
+      <thead><tr><th>الدواء</th><th>الكمية</th><th>سعر الشراء</th><th>الإجمالي</th><th></th></tr></thead>
+      <tbody id="purItemsBody"></tbody>
+    </table>
+    <div class="totals"><div class="totals-row grand"><span>إجمالي الفاتورة</span><span id="purTotal">0.00 ج.م</span></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('purchaseModal')">إلغاء</button>
+      <button class="btn btn-primary" onclick="savePurchase()"><span class="emoji-icon" aria-hidden="true">💾</span> حفظ الفاتورة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sale details modal -->
+<div class="modal-overlay" id="saleModal">
+  <div class="modal"><div class="modal-header"><h2>تفاصيل الفاتورة</h2><span class="modal-close" onclick="closeModal('saleModal')">&times;</span></div><div id="saleDetails"></div></div>
+</div>
+
+<div id="printArea" style="display:none;"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ============ DATA ============ */
+const SEED_MEDS = [
+  ['باراسيتامول 500مج','6221234500011','مسكنات','فاركو','شريط',12,15,200,'2026-12-31',10],
+  ['أوجمنتين 1جم','6221234500028','مضادات حيوية','جلاكسو','علبة',95,120,45,'2026-08-15',10],
+  ['كونجستال','6221234500035','أدوية البرد','المهن','شريط',18,25,150,'2027-03-20',15],
+  ['كلاريتين','6221234500042','مضادات الحساسية','شيرنغ','شريط',45,60,80,'2026-11-10',10],
+  ['أنتينال','6221234500059','الجهاز الهضمي','أمون','شريط',20,28,120,'2026-09-25',15],
+  ['كتافلام 50مج','6221234500066','مسكنات','نوفارتس','شريط',30,40,65,'2026-10-12',10],
+  ['سيتال شراب','6221234500073','مسكنات أطفال','إيبيكو','زجاجة',14,20,90,'2026-07-30',12],
+  ['نازونكس بخاخ','6221234500080','أدوية الأنف','MSD','زجاجة',180,230,25,'2026-12-15',5],
+  ['فلاجيل 500','6221234500097','مضادات حيوية','سانوفي','شريط',22,30,70,'2027-01-20',10],
+  ['ليبتر 20مج','6221234500103','الكوليسترول','فايزر','علبة',85,115,40,'2026-09-05',8],
+  ['كونكور 5مج','6221234500110','ضغط الدم','ميرك','شريط',40,55,55,'2026-08-22',10],
+  ['جلوكوفاج 850','6221234500127','السكري','ميرك','شريط',25,35,100,'2027-02-15',15],
+  ['لازكس 40مج','6221234500134','مدرات البول','سانوفي','شريط',18,25,60,'2026-10-08',10],
+  ['زيرتك','6221234500141','مضادات الحساسية','UCB','شريط',38,50,75,'2026-11-25',10],
+  ['نيوروفين','6221234500158','مسكنات','رد سي','علبة',35,48,85,'2027-04-10',10],
+  ['أموكسيل 500','6221234500165','مضادات حيوية','جلاكسو','شريط',28,38,8,'2026-06-20',10],
+  ['دولفين فيتامين','6221234500172','فيتامينات','أمون','علبة',55,75,110,'2027-05-30',10],
+  ['أسبرين 75','6221234500189','أدوية القلب','باير','شريط',15,22,140,'2026-12-01',15],
+  ['زنتاك 150','6221234500196','الجهاز الهضمي','جلاكسو','شريط',45,60,5,'2026-07-05',10],
+  ['بانادول إكسترا','6221234500202','مسكنات','جلاكسو','شريط',16,22,180,'2027-06-15',20],
+  ['فولتارين جل','6221234500219','أدوية موضعية','نوفارتس','أنبوبة',60,80,40,'2026-09-12',8],
+  ['أوميجا 3','6221234500226','مكملات غذائية','MEPACO','علبة',90,125,55,'2027-03-08',10],
+  ['ديكلوفين أمبول','6221234500233','مسكنات','أمون','أمبولة',8,12,200,'2026-08-30',20],
+  ['برونكيكير شراب','6221234500240','أدوية السعال','ايبيكو','زجاجة',22,30,2,'2026-05-18',10],
+  ['ديانيل','6221234500257','السكري','EIPICO','شريط',32,45,68,'2026-11-22',10],
+];
+
+let meds = [], sales = [], purchases = [], cart = [], purchaseItems = [];
+
+/* ============ STORAGE ============ */
+function save(){
+  localStorage.setItem('pc_meds',JSON.stringify(meds));
+  localStorage.setItem('pc_sales',JSON.stringify(sales));
+  localStorage.setItem('pc_purchases',JSON.stringify(purchases));
+}
+function load(){
+  meds = JSON.parse(localStorage.getItem('pc_meds')||'null') || SEED_MEDS.map((m,i)=>({
+    id:'M'+(i+1), name:m[0], barcode:m[1], category:m[2], company:m[3], unit:m[4],
+    cost:m[5], price:m[6], qty:m[7], expiry:m[8], minQty:m[9]
+  }));
+  sales = JSON.parse(localStorage.getItem('pc_sales')||'[]');
+  purchases = JSON.parse(localStorage.getItem('pc_purchases')||'[]');
+}
+
+/* ============ UTILITIES ============ */
+const $ = id=>document.getElementById(id);
+const fmt = n=>Number(n||0).toFixed(2)+' ج.م';
+const today = ()=>new Date().toISOString().slice(0,10);
+function uid(p='X'){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+
+function daysToExpiry(d){return Math.floor((new Date(d)-new Date())/(1000*60*60*24));}
+function medStatus(m){
+  const d = daysToExpiry(m.expiry);
+  if(d<0) return {key:'expired',label:'منتهي',cls:'badge-danger'};
+  if(d<=30) return {key:'expiring',label:`ينتهي خلال ${d}ي`,cls:'badge-danger'};
+  if(d<=60) return {key:'expiring',label:`ينتهي خلال ${d}ي`,cls:'badge-warning'};
+  if(d<=90) return {key:'expiring',label:`ينتهي خلال ${d}ي`,cls:'badge-warning'};
+  if(m.qty<=0) return {key:'low',label:'نفد',cls:'badge-danger'};
+  if(m.qty<=m.minQty) return {key:'low',label:'منخفض',cls:'badge-warning'};
+  return {key:'ok',label:'متوفر',cls:'badge-success'};
+}
+
+function toast(msg, type='success'){
+  const icons = {success:'fa-circle-check',error:'fa-circle-xmark',warning:'fa-triangle-exclamation',info:'fa-circle-info'};
+  const el = document.createElement('div');
+  el.className='toast '+type;
+  el.innerHTML=`<span class="emoji-icon" aria-hidden="true">•</span><span>${msg}</span>`;
+  $('toastWrap').appendChild(el);
+  setTimeout(()=>{el.style.opacity=0;setTimeout(()=>el.remove(),300);},2800);
+}
+
+function openModal(id){$(id).classList.add('active');}
+function closeModal(id){$(id).classList.remove('active'); if(id==='medModal'){$(id).style.zIndex=''; if(typeof purchaseAddMode!=='undefined') purchaseAddMode=false;}}
+
+/* ============ NAVIGATION ============ */
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    const v = item.dataset.view;
+    document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
+    $('view-'+v).classList.add('active');
+    $('pageTitle').textContent = item.textContent.trim();
+    if(v==='dashboard') renderDashboard();
+    if(v==='inventory') renderInventory();
+    if(v==='pos') renderPOSProducts();
+    if(v==='purchases') renderPurchases();
+    if(v==='sales') renderSales();
+    if(v==='reports') renderReports();
+    if(v==='search'){ $('searchPageInput').value=''; renderSearchPage(); setTimeout(()=>$('searchPageInput').focus(),100); }
+    closeSidebar();
+  });
+});
+function toggleSidebar(){const s=$('sidebar'),b=$('sidebarBackdrop');s.classList.toggle('open');b.classList.toggle('open',s.classList.contains('open'));}
+function closeSidebar(){$('sidebar').classList.remove('open');$('sidebarBackdrop').classList.remove('open');}
+function renderSearchPage(){
+  const q=$('searchPageInput').value.trim().toLowerCase();
+  const box=$('searchPageResults');
+  const list = q ? meds.filter(m=>m.name.toLowerCase().includes(q)||(m.barcode||'').includes(q)||(m.category||'').toLowerCase().includes(q)) : meds;
+  if(!list.length){ box.innerHTML='<div class="empty" style="padding:40px;text-align:center;color:var(--muted);"><span class="emoji-icon" aria-hidden="true">🔍</span><p style="margin-top:8px;">لا توجد نتائج مطابقة</p></div>'; return; }
+  box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:12px;">`+list.map(m=>{
+    const low=m.qty<=5;
+    return `<div class="card" style="padding:14px;border:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:6px;"><strong style="color:var(--primary-dark);">${m.name}</strong><span style="background:${low?'var(--danger)':'var(--primary)'};color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;">${m.qty}</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">${m.category||'عام'} ${m.barcode?'• '+m.barcode:''}</div>
+      <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:8px;">${fmt(m.price)}</div>
+      <div style="display:flex;gap:6px;"><button class="btn btn-sm btn-primary" style="flex:1;" onclick="addToCart('${m.id}');toast('تمت إضافة ${m.name.replace(/'/g,"\\'")} للسلة')"><span class="emoji-icon" aria-hidden="true">🛒</span> للسلة</button><button class="btn btn-sm btn-outline" onclick="editMed('${m.id}')"><span class="emoji-icon" aria-hidden="true">✏️</span></button></div>
+    </div>`;
+  }).join('')+`</div>`;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
+
+/* ============ THEME ============ */
+$('themeToggle').addEventListener('click',()=>{
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  $('themeToggle').innerHTML = `<span class="emoji-icon" aria-hidden="true">•</span>`;
+  localStorage.setItem('pc_theme', isDark?'dark':'light');
+  if($('view-dashboard').classList.contains('active')) renderDashboard();
+  if($('view-reports').classList.contains('active')) renderReports();
+});
+if(localStorage.getItem('pc_theme')==='dark'){document.body.classList.add('dark');$('themeToggle').innerHTML='<span class="emoji-icon" aria-hidden="true">☀️</span>';}
+
+/* ============ DASHBOARD ============ */
+let salesChart, monthlyChart;
+function renderDashboard(){
+  const t = today();
+  const todaySales = sales.filter(s=>s.date.slice(0,10)===t);
+  $('statSalesToday').textContent = fmt(todaySales.reduce((a,s)=>a+s.total,0));
+  $('statOpsToday').textContent = todaySales.length;
+  $('statLow').textContent = meds.filter(m=>m.qty<=m.minQty).length;
+  $('statExp').textContent = meds.filter(m=>{const d=daysToExpiry(m.expiry);return d>=0 && d<=90;}).length;
+
+  // 7-day chart
+  const labels=[], data=[];
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = d.toISOString().slice(0,10);
+    labels.push(d.toLocaleDateString('ar-EG',{weekday:'short',day:'numeric'}));
+    data.push(sales.filter(s=>s.date.slice(0,10)===k).reduce((a,s)=>a+s.total,0));
+  }
+  if(salesChart) salesChart.destroy();
+  const txtColor = getComputedStyle(document.body).getPropertyValue('--text');
+  salesChart = new Chart($('salesChart'),{
+    type:'line',
+    data:{labels,datasets:[{label:'المبيعات',data,borderColor:'#0a8f5e',backgroundColor:'rgba(10,143,94,0.15)',tension:.4,fill:true,borderWidth:3,pointRadius:5,pointBackgroundColor:'#0a8f5e'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:txtColor}},y:{ticks:{color:txtColor}}}}
+  });
+
+  // Top sellers
+  const sellers = {};
+  sales.forEach(s=>s.items.forEach(i=>{sellers[i.name]=(sellers[i.name]||0)+i.qty;}));
+  const top = Object.entries(sellers).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  $('topSellers').innerHTML = top.length? top.map(([n,q],i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <span><span style="background:var(--primary-light);color:var(--primary);padding:4px 8px;border-radius:8px;font-weight:700;margin-left:8px;">${i+1}</span> ${n}</span>
+      <span class="badge badge-success">${q}</span>
+    </div>`).join('') : '<div class="empty"><span class="emoji-icon" aria-hidden="true">📦</span><p>لا توجد مبيعات بعد</p></div>';
+
+  // Alerts
+  const alerts = [];
+  meds.filter(m=>m.qty<=m.minQty).slice(0,5).forEach(m=>alerts.push(`<div style="padding:10px;border-right:3px solid var(--warning);background:var(--primary-light);margin-bottom:6px;border-radius:6px;"><b>${m.name}</b> - الكمية المتبقية: ${m.qty}</div>`));
+  meds.filter(m=>{const d=daysToExpiry(m.expiry);return d>=0&&d<=60;}).slice(0,5).forEach(m=>alerts.push(`<div style="padding:10px;border-right:3px solid var(--danger);background:var(--primary-light);margin-bottom:6px;border-radius:6px;"><b>${m.name}</b> - ينتهي في ${m.expiry}</div>`));
+  $('alertsList').innerHTML = alerts.length? alerts.join('') : '<div class="empty"><span class="emoji-icon" aria-hidden="true">✅</span><p>لا توجد تنبيهات</p></div>';
+}
+
+/* ============ INVENTORY ============ */
+function renderInventory(){
+  const q = ($('invSearch').value||'').toLowerCase();
+  const cat = $('invCategory').value;
+  const st = $('invStatus').value;
+
+  const cats = [...new Set(meds.map(m=>m.category))];
+  $('invCategory').innerHTML = '<option value="">كل الفئات</option>'+cats.map(c=>`<option ${c===cat?'selected':''}>${c}</option>`).join('');
+  $('catList').innerHTML = cats.map(c=>`<option value="${c}">`).join('');
+
+  const filtered = meds.filter(m=>{
+    if(q && !m.name.toLowerCase().includes(q) && !m.barcode.includes(q)) return false;
+    if(cat && m.category!==cat) return false;
+    if(st){const s=medStatus(m);if(s.key!==st && !(st==='expired' && s.key==='expired')) return false;}
+    return true;
+  });
+
+  $('invBody').innerHTML = filtered.length? filtered.map(m=>{
+    const s = medStatus(m);
+    return `<tr>
+      <td><b>${m.name}</b></td><td>${m.barcode}</td><td>${m.category}</td><td>${m.company||'-'}</td><td>${m.unit}</td>
+      <td>${fmt(m.price)}</td><td>${m.qty}</td><td>${m.expiry}</td>
+      <td><span class="badge ${s.cls}">${s.label}</span></td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="editMed('${m.id}')"><span class="emoji-icon" aria-hidden="true">✏️</span></button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMed('${m.id}')"><span class="emoji-icon" aria-hidden="true">🗑️</span></button>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="10"><div class="empty"><span class="emoji-icon" aria-hidden="true">💊</span><p>لا توجد نتائج</p></div></td></tr>`;
+}
+
+function openMedModal(){
+  $('medModalTitle').textContent='إضافة دواء جديد';
+  $('medForm').reset(); $('medId').value=''; $('medMin').value=10;
+  openModal('medModal');
+}
+function editMed(id){
+  const m = meds.find(x=>x.id===id); if(!m) return;
+  $('medModalTitle').textContent='تعديل بيانات الدواء';
+  $('medId').value=m.id;$('medName').value=m.name;$('medBarcode').value=m.barcode;$('medCategory').value=m.category;
+  $('medCompany').value=m.company||'';$('medUnit').value=m.unit;$('medCost').value=m.cost;$('medPrice').value=m.price;
+  $('medQty').value=m.qty;$('medMin').value=m.minQty;$('medExpiry').value=m.expiry;
+  openModal('medModal');
+}
+function saveMed(e){
+  e.preventDefault();
+  const data={
+    name:$('medName').value.trim(),barcode:$('medBarcode').value.trim(),category:$('medCategory').value.trim(),
+    company:$('medCompany').value.trim(),unit:$('medUnit').value,cost:+$('medCost').value,price:+$('medPrice').value,
+    qty:+$('medQty').value,minQty:+$('medMin').value,expiry:$('medExpiry').value
+  };
+  const id = $('medId').value;
+  if(id){const i=meds.findIndex(m=>m.id===id);meds[i]={...meds[i],...data};toast('تم تحديث الدواء بنجاح');}
+  else {
+    const newMed={id:uid('M'),...data};
+    meds.push(newMed);
+    if(purchaseAddMode){
+      selectPurMed(newMed.id);
+      if(newMed.cost) $('purCost').value=newMed.cost;
+      toast('تمت إضافة الدواء — اضبط كمية الفاتورة ثم أضفها');
+    } else toast('تمت إضافة الدواء بنجاح');
+  }
+  save();closeModal('medModal');
+  if(document.querySelector('#view-inventory.active')) renderInventory();
+}
+function deleteMed(id){
+  if(!confirm('هل أنت متأكد من حذف هذا الدواء؟')) return;
+  meds = meds.filter(m=>m.id!==id);save();renderInventory();toast('تم حذف الدواء','warning');
+}
+
+/* ============ POS ============ */
+function renderPOSProducts(){
+  const q = ($('posSearch').value||'').toLowerCase().trim();
+  const list = meds.filter(m=>m.qty>0 && (!q || m.name.toLowerCase().includes(q) || m.barcode.includes(q)));
+  // barcode exact -> auto add
+  if(q){
+    const exact = meds.find(m=>m.barcode===q);
+    if(exact && q.length>=8){addToCart(exact.id);$('posSearch').value='';renderPOSProducts();return;}
+  }
+  $('posProducts').innerHTML = list.length? list.slice(0,50).map(m=>`
+    <div class="product-card" onclick="addToCart('${m.id}')">
+      <div class="pic"><span class="emoji-icon" aria-hidden="true">💊</span></div>
+      <h4>${m.name}</h4>
+      <div class="price">${fmt(m.price)}</div>
+      <div class="stock">المتاح: ${m.qty} ${m.unit}</div>
+    </div>`).join('') : '<div class="empty" style="grid-column:1/-1;"><span class="emoji-icon" aria-hidden="true">🔍</span><p>لا توجد منتجات</p></div>';
+}
+$('posSearch').addEventListener('input',renderPOSProducts);
+
+function addToCart(id){
+  const m = meds.find(x=>x.id===id); if(!m||m.qty<=0) return toast('غير متوفر بالمخزون','error');
+  const ex = cart.find(c=>c.id===id);
+  if(ex){if(ex.qty<m.qty){ex.qty++;}else return toast('لا توجد كمية إضافية','warning');}
+  else cart.push({id:m.id,name:m.name,price:m.price,qty:1,max:m.qty});
+  renderCart();
+}
+function renderCart(){
+  $('cartItems').innerHTML = cart.length? cart.map(c=>`
+    <div class="cart-item">
+      <div class="name">${c.name}<br><small style="color:var(--muted)">${fmt(c.price)}</small></div>
+      <div class="qty">
+        <button onclick="changeQty('${c.id}',-1)">-</button>
+        <span>${c.qty}</span>
+        <button onclick="changeQty('${c.id}',1)">+</button>
+      </div>
+      <div class="total">${fmt(c.price*c.qty)}</div>
+      <button class="remove" onclick="removeCart('${c.id}')"><span class="emoji-icon" aria-hidden="true">❌</span></button>
+    </div>`).join('') : '<div class="empty"><span class="emoji-icon" aria-hidden="true">•</span><p>السلة فارغة</p></div>';
+  updateTotals();
+}
+function changeQty(id,delta){
+  const c = cart.find(x=>x.id===id); if(!c) return;
+  c.qty+=delta;
+  if(c.qty<=0) cart = cart.filter(x=>x.id!==id);
+  else if(c.qty>c.max){c.qty=c.max;toast('وصلت للحد الأقصى المتاح','warning');}
+  renderCart();
+}
+function removeCart(id){cart=cart.filter(c=>c.id!==id);renderCart();}
+function clearCart(){if(cart.length && !confirm('تفريغ السلة؟')) return; cart=[];$('discountValue').value=0;$('paidAmount').value=0;renderCart();}
+
+function updateTotals(){
+  const sub = cart.reduce((a,c)=>a+c.price*c.qty,0);
+  const dt = $('discountType').value, dv = +$('discountValue').value||0;
+  let disc = 0;
+  if(dt==='percent') disc = sub*Math.min(dv,100)/100;
+  else if(dt==='fixed') disc = Math.min(dv,sub);
+  const tot = sub-disc;
+  $('subtotal').textContent=fmt(sub);
+  $('discountShow').textContent=fmt(disc);
+  $('grandTotal').textContent=fmt(tot);
+  updateChange();
+}
+function updateChange(){
+  const tot = cart.reduce((a,c)=>a+c.price*c.qty,0);
+  const dt = $('discountType').value, dv=+$('discountValue').value||0;
+  let disc=0; if(dt==='percent') disc=tot*Math.min(dv,100)/100; else if(dt==='fixed') disc=Math.min(dv,tot);
+  const grand = tot-disc;
+  const paid = +$('paidAmount').value||0;
+  $('changeAmount').value = fmt(Math.max(0,paid-grand));
+}
+function completeSale(){
+  if(!cart.length) return toast('السلة فارغة','error');
+  const sub = cart.reduce((a,c)=>a+c.price*c.qty,0);
+  const dt=$('discountType').value, dv=+$('discountValue').value||0;
+  let disc=0; if(dt==='percent') disc=sub*Math.min(dv,100)/100; else if(dt==='fixed') disc=Math.min(dv,sub);
+  const total = sub-disc;
+  const paid = +$('paidAmount').value||0;
+  const method = $('paymentMethod').value;
+  if(method==='cash' && paid<total) return toast('المبلغ المدفوع غير كافٍ','error');
+
+  const sale = {
+    id: 'INV'+Date.now(), date:new Date().toISOString(),
+    items: cart.map(c=>({id:c.id,name:c.name,price:c.price,qty:c.qty})),
+    subtotal:sub, discount:disc, total, paid, change:Math.max(0,paid-total), method
+  };
+  cart.forEach(c=>{const m=meds.find(x=>x.id===c.id); if(m) m.qty=Math.max(0,m.qty-c.qty);});
+  sales.unshift(sale); save();
+  toast('تم إتمام البيع بنجاح');
+  printInvoice(sale);
+  cart=[];$('discountValue').value=0;$('paidAmount').value=0;renderCart();renderPOSProducts();
+}
+
+function printInvoice(sale){
+  const methods={cash:'نقداً',card:'بطاقة',insurance:'تأمين'};
+  $('printArea').innerHTML = `
+    <div style="max-width:400px;margin:auto;font-family:'Cairo',sans-serif;direction:rtl;">
+      <h2 style="text-align:center;color:#0a8f5e;">فارما كير</h2>
+      <p style="text-align:center;">نظام إدارة الصيدلية</p>
+      <hr><p><b>فاتورة:</b> ${sale.id}</p>
+      <p><b>التاريخ:</b> ${new Date(sale.date).toLocaleString('ar-EG')}</p>
+      <p><b>طريقة الدفع:</b> ${methods[sale.method]}</p>
+      <hr>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="border-bottom:1px solid #000;"><th align="right">الصنف</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
+        <tbody>${sale.items.map(i=>`<tr><td>${i.name}</td><td align="center">${i.qty}</td><td align="center">${i.price.toFixed(2)}</td><td align="center">${(i.price*i.qty).toFixed(2)}</td></tr>`).join('')}</tbody>
+      </table>
+      <hr>
+      <p>المجموع الفرعي: ${sale.subtotal.toFixed(2)} ج.م</p>
+      <p>الخصم: ${sale.discount.toFixed(2)} ج.م</p>
+      <h3>الإجمالي: ${sale.total.toFixed(2)} ج.م</h3>
+      <p>المدفوع: ${sale.paid.toFixed(2)} ج.م | الباقي: ${sale.change.toFixed(2)} ج.م</p>
+      <hr><p style="text-align:center;">شكراً لزيارتكم</p>
+    </div>`;
+  $('printArea').style.display='block';
+  window.print();
+  $('printArea').style.display='none';
+}
+
+/* ============ PURCHASES ============ */
+let purchaseAddMode=false;
+function openPurchaseModal(){
+  purchaseItems=[]; $('purSupplier').value='';$('purInvoice').value='INV-'+Date.now().toString().slice(-6);$('purDate').value=today();
+  $('purSearch').value='';$('purSelectedId').value='';$('purSelectedMed').style.display='none';$('purSearchResults').style.display='none';
+  renderPurchaseItems(); openModal('purchaseModal');
+}
+function openMedModalFromPurchase(){
+  purchaseAddMode=true;
+  $('medModal').style.zIndex=2000;
+  openMedModal();
+}
+function renderPurSearchResults(){
+  const q=$('purSearch').value.trim().toLowerCase();
+  const box=$('purSearchResults');
+  if(!q){ box.style.display='none'; box.innerHTML=''; return; }
+  const list = meds.filter(m=>m.name.toLowerCase().includes(q) || (m.barcode||'').includes(q)).slice(0,30);
+  if(!list.length){ box.innerHTML='<div style="padding:12px;color:var(--muted);text-align:center;">لا توجد نتائج — استخدم زر "إضافة دواء جديد إلى المخزون" أدناه</div>'; box.style.display='block'; return; }
+  box.innerHTML = list.map(m=>`<div onclick="selectPurMed('${m.id}')" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background=''"><span><strong>${m.name}</strong> <small style="color:var(--muted);">${m.category||''}</small></span><span style="color:var(--muted);font-size:12px;">المخزون: ${m.qty}</span></div>`).join('');
+  box.style.display='block';
+}
+function selectPurMed(id){
+  const m=meds.find(x=>x.id===id);if(!m)return;
+  $('purSelectedId').value=id;
+  $('purSearch').value='';
+  $('purSearchResults').style.display='none';
+  const el=$('purSelectedMed'); el.style.display='flex';
+  el.innerHTML=`<span>✓ ${m.name} <small style="color:var(--muted);font-weight:400;">(${m.category||''})</small></span><button type="button" class="btn btn-sm btn-outline" onclick="clearPurSelected()">تغيير</button>`;
+  if(!$('purCost').value && m.cost) $('purCost').value=m.cost;
+}
+function clearPurSelected(){$('purSelectedId').value='';$('purSelectedMed').style.display='none';$('purSearch').focus();}
+function addPurchaseItem(){
+  const qty=+$('purQty').value, cost=+$('purCost').value;
+  if(qty<=0||cost<=0) return toast('أكمل الكمية وسعر الشراء','error');
+  const sel=$('purSelectedId').value;
+  if(!sel) return toast('ابحث واختر دواءً من المخزون أو أضف دواءً جديداً','error');
+  const m = meds.find(x=>x.id===sel);
+  purchaseItems.push({id:sel,name:m.name,qty,cost});
+  clearPurSelected();
+  $('purQty').value=1;$('purCost').value='';
+  renderPurchaseItems();
+}
+document.addEventListener('click',e=>{if(!e.target.closest('#purSearch')&&!e.target.closest('#purSearchResults')){const r=$('purSearchResults');if(r)r.style.display='none';}});
+function renderPurchaseItems(){
+  $('purItemsBody').innerHTML = purchaseItems.length? purchaseItems.map((it,i)=>`
+    <tr><td>${it.name}${it.isNew?' <span style="background:var(--primary);color:#fff;padding:2px 6px;border-radius:4px;font-size:11px;">جديد</span>':''}</td><td>${it.qty}</td><td>${fmt(it.cost)}</td><td>${fmt(it.qty*it.cost)}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="purchaseItems.splice(${i},1);renderPurchaseItems();"><span class="emoji-icon" aria-hidden="true">❌</span></button></td></tr>
+  `).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">لم تتم إضافة أصناف</td></tr>';
+  $('purTotal').textContent = fmt(purchaseItems.reduce((a,i)=>a+i.qty*i.cost,0));
+}
+function savePurchase(){
+  if(!$('purSupplier').value||!$('purInvoice').value||!purchaseItems.length) return toast('أكمل بيانات الفاتورة','error');
+  const pur = {id:uid('P'),supplier:$('purSupplier').value,invoice:$('purInvoice').value,date:$('purDate').value,items:[...purchaseItems],total:purchaseItems.reduce((a,i)=>a+i.qty*i.cost,0)};
+  let added=0;
+  purchaseItems.forEach(it=>{
+    if(it.isNew){
+      const newMed={id:uid('M'),name:it.name,category:it.category||'عام',barcode:'',price:it.price||it.cost*1.3,cost:it.cost,qty:it.qty,expiry:it.expiry||''};
+      meds.unshift(newMed); added++;
+    } else {
+      const m=meds.find(x=>x.id===it.id);if(m){m.qty+=it.qty;m.cost=it.cost;}
+    }
+  });
+  purchases.unshift(pur); save();
+  closeModal('purchaseModal');renderPurchases();renderInventory&&renderInventory();
+  toast(`تم حفظ الفاتورة وتحديث المخزون${added?` (تمت إضافة ${added} دواء جديد)`:''}`);
+}
+function renderPurchases(){
+  $('purchasesBody').innerHTML = purchases.length? purchases.map(p=>`
+    <tr><td>${p.invoice}</td><td>${p.supplier}</td><td>${p.date}</td><td>${p.items.length}</td><td>${fmt(p.total)}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="deletePurchase('${p.id}')"><span class="emoji-icon" aria-hidden="true">🗑️</span></button></td></tr>
+  `).join('') : '<tr><td colspan="6"><div class="empty"><span class="emoji-icon" aria-hidden="true">🧾</span><p>لا توجد فواتير شراء</p></div></td></tr>';
+}
+function deletePurchase(id){
+  if(!confirm('حذف هذه الفاتورة؟')) return;
+  purchases = purchases.filter(p=>p.id!==id); save(); renderPurchases(); toast('تم حذف الفاتورة','warning');
+}
+
+/* ============ SALES LOG ============ */
+function renderSales(){
+  const methods={cash:'نقداً',card:'بطاقة',insurance:'تأمين'};
+  $('salesBody').innerHTML = sales.length? sales.map(s=>`
+    <tr><td>${s.id}</td><td>${new Date(s.date).toLocaleString('ar-EG')}</td><td>${s.items.length}</td>
+    <td><span class="badge badge-info">${methods[s.method]}</span></td><td>${fmt(s.discount)}</td><td><b>${fmt(s.total)}</b></td>
+    <td><button class="btn btn-sm btn-outline" onclick="viewSale('${s.id}')"><span class="emoji-icon" aria-hidden="true">👁️</span> عرض</button></td></tr>
+  `).join('') : '<tr><td colspan="7"><div class="empty"><span class="emoji-icon" aria-hidden="true">🧾</span><p>لا توجد مبيعات</p></div></td></tr>';
+}
+function viewSale(id){
+  const s = sales.find(x=>x.id===id); if(!s) return;
+  const methods={cash:'نقداً',card:'بطاقة',insurance:'تأمين'};
+  $('saleDetails').innerHTML = `
+    <p><b>رقم الفاتورة:</b> ${s.id}</p>
+    <p><b>التاريخ:</b> ${new Date(s.date).toLocaleString('ar-EG')}</p>
+    <p><b>طريقة الدفع:</b> ${methods[s.method]}</p>
+    <table style="margin-top:14px;">
+      <thead><tr><th>الصنف</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
+      <tbody>${s.items.map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>${fmt(i.price)}</td><td>${fmt(i.price*i.qty)}</td></tr>`).join('')}</tbody>
+    </table>
+    <div class="totals">
+      <div class="totals-row"><span>المجموع</span><span>${fmt(s.subtotal)}</span></div>
+      <div class="totals-row"><span>الخصم</span><span>${fmt(s.discount)}</span></div>
+      <div class="totals-row grand"><span>الإجمالي</span><span>${fmt(s.total)}</span></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="printInvoice(${JSON.stringify(s).replace(/"/g,'&quot;')})"><span class="emoji-icon" aria-hidden="true">🖨️</span> طباعة</button>
+  `;
+  openModal('saleModal');
+}
+
+/* ============ REPORTS ============ */
+function renderReports(){
+  // monthly
+  const labels=[], data=[];
+  for(let i=5;i>=0;i--){
+    const d = new Date(); d.setMonth(d.getMonth()-i);
+    const ym = d.toISOString().slice(0,7);
+    labels.push(d.toLocaleDateString('ar-EG',{month:'long'}));
+    data.push(sales.filter(s=>s.date.slice(0,7)===ym).reduce((a,s)=>a+s.total,0));
+  }
+  if(monthlyChart) monthlyChart.destroy();
+  const txt = getComputedStyle(document.body).getPropertyValue('--text');
+  monthlyChart = new Chart($('monthlyChart'),{
+    type:'bar',
+    data:{labels,datasets:[{label:'المبيعات',data,backgroundColor:'rgba(10,143,94,0.7)',borderRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:txt}},y:{ticks:{color:txt}}}}
+  });
+
+  const sellers={};
+  sales.forEach(s=>s.items.forEach(i=>{sellers[i.name]=(sellers[i.name]||0)+i.qty;}));
+  const top = Object.entries(sellers).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  $('topSellersReport').innerHTML = top.length? top.map(([n,q],i)=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>${i+1}. ${n}</span><span class="badge badge-success">${q} وحدة</span></div>`).join('') : '<div class="empty"><span class="emoji-icon" aria-hidden="true">📦</span><p>لا توجد بيانات</p></div>';
+
+  const low = meds.filter(m=>m.qty<=m.minQty);
+  $('lowStockReport').innerHTML = low.length? low.map(m=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>${m.name}</span><span class="badge badge-warning">${m.qty} متبقي</span></div>`).join('') : '<div class="empty"><span class="emoji-icon" aria-hidden="true">✅</span><p>كل الأدوية بمخزون كافٍ</p></div>';
+
+  const exp = meds.filter(m=>{const d=daysToExpiry(m.expiry);return d<=90;}).sort((a,b)=>daysToExpiry(a.expiry)-daysToExpiry(b.expiry));
+  $('expiryReport').innerHTML = exp.length? exp.map(m=>{const d=daysToExpiry(m.expiry);return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>${m.name}</span><span class="badge ${d<0?'badge-danger':d<=30?'badge-danger':'badge-warning'}">${d<0?'منتهي':'بعد '+d+' يوم'}</span></div>`}).join('') : '<div class="empty"><span class="emoji-icon" aria-hidden="true">✅</span><p>لا توجد أدوية قاربت الانتهاء</p></div>';
+}
+
+/* ============ INIT ============ */
+load();
+renderDashboard();
+</script>
+</body>
+</html>
